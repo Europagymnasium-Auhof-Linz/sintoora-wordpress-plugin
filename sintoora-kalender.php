@@ -3,7 +3,7 @@
  * Plugin Name:       Sintoora Kalender (Europagymnasium Auhof)
  * Plugin URI:        https://www.europagym.at/
  * Description:       Zeigt den Schulkalender aus SINTOORA mit Klassenfilter an – ohne Suchfeld, ohne Lehrer-Filter, ohne Lehrerdaten und ohne Teilnehmerlisten (Schülernamen). Führt drei Sintoora-Kalender zusammen: Klassentermine, allgemeine Termine wie Ferien, Feiertage und schulautonome Tage sowie die Termine zur Reifeprüfung (eigener Filter „Reifeprüfung“). Allgemeine Termine ohne Klassenzuordnung erscheinen bei jeder Klasse, Tests ohne Klassenzuordnung werden ausgeblendet. Die Links der Sintoora-Kalender werden unter „Einstellungen → Sintoora Kalender“ eingetragen. Einbinden mit dem Shortcode [sintoora_kalender]. Die Termine werden von WordPress serverseitig geladen, bereinigt, zwischengespeichert und im Hintergrund aktualisiert; die Antwort wird gzip-komprimiert.
- * Version:           1.6.0
+ * Version:           1.6.1
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Europagymnasium Auhof
@@ -45,7 +45,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 
 /** Version des Plugins. */
-const SINTOORA_KALENDER_VERSION = '1.6.0';
+const SINTOORA_KALENDER_VERSION = '1.6.1';
+
+/** Ab diesem Alter (Sekunden) steht beim Kalender ein Hinweis, dass die Termine veraltet sein können. */
+const SINTOORA_KALENDER_VERALTET_AB = 7 * DAY_IN_SECONDS;
 
 /**
  * Stand der Bereinigung und der gespeicherten Form (Teil des Cache-Schlüssels).
@@ -935,7 +938,15 @@ function sintoora_kalender_rest_antwort() {
 		return $antwort;
 	}
 
-	$antwort = new WP_REST_Response( array( 'appointments' => array_values( $daten['appointments'] ) ), 200 );
+	// „stand“ (Zeitpunkt des Abrufs) und „veraltet“ (älter als 7 Tage) für den Hinweis im Kalender.
+	$antwort = new WP_REST_Response(
+		array(
+			'appointments' => array_values( $daten['appointments'] ),
+			'stand'        => wp_date( 'j.n.Y, G:i', (int) $daten['zeit'] ),
+			'veraltet'     => time() - (int) $daten['zeit'] > SINTOORA_KALENDER_VERALTET_AB,
+		),
+		200
+	);
 	// Frischer Stand: Browser darf 5 Minuten wiederverwenden. Älterer Stand (Abruf läuft im
 	// Hintergrund): nicht wiederverwenden, damit das nächste Laden den neuen Stand zeigt.
 	$antwort->header( 'Cache-Control', $daten['frisch'] ? 'public, max-age=300' : 'no-cache' );
@@ -1139,6 +1150,7 @@ function sintoora_kalender_shortcode() {
 	wp_enqueue_script( 'sintoora-kalender' );
 
 	return '<div id="sintoora-kalender" class="sk">'
+		. '<p class="sk-veraltet" hidden></p>'
 		. '<div class="sk-bar">'
 		. '<div class="sk-classes" role="group" aria-label="' . esc_attr( 'Klasse auswählen' ) . '"></div>'
 		. '<label class="sk-past"><input type="checkbox" class="sk-past-input"> ' . esc_html( 'Frühere Termine anzeigen' ) . '</label>'
@@ -1184,6 +1196,7 @@ function sintoora_kalender_css() {
   .sk-item .collapse.show { display: block; }
   .sk-item a { color: var(--sk-accent); }
   .sk-note { margin-top: 1rem; font-size: .8rem; color: var(--sk-muted); }
+  .sk-veraltet { margin: 0 0 1rem; padding: .6rem .8rem; border-left: 4px solid var(--sk-accent); background: #fff8e1; color: #222; font-size: .95rem; }
   .sk [hidden] { display: none !important; }
   @media (max-width: 600px) {
     .sk-row-label { min-width: 100%; }
@@ -1475,6 +1488,12 @@ function sintoora_kalender_js() {
   });
 
   function start(data) {
+    // Hinweis, wenn der gespeicherte Stand älter als 7 Tage ist (Sintoora seit Längerem nicht erreichbar).
+    var elAlt = root.querySelector('.sk-veraltet');
+    if (elAlt && data && data.veraltet && data.stand) {
+      elAlt.textContent = 'Hinweis: Die Termine wurden zuletzt am ' + String(data.stand) + ' Uhr aktualisiert. Neuere Änderungen fehlen eventuell.';
+      elAlt.hidden = false;
+    }
     model = prepare(data);
     renderButtons(model.classes, model.cats);
     renderList(model.items);
