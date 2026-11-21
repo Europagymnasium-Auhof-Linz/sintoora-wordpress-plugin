@@ -1,0 +1,12 @@
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.webp binary
+
+# Nicht ins Plugin-Archiv (git archive / Codeberg-Download)
+.gitattributes export-ignore
+.gitignore export-ignore
+README.md export-ignore
+CHANGELOG.md export-ignore
+ENTWICKLUNG.md export-ignore
+tests export-ignore

@@ -1,0 +1,17 @@
+# Betriebssystem und Editoren
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+
+# Erzeugte Pakete und Werkzeuge
+*.zip
+node_modules/
+vendor/
+
+# Nie committen: Geheimnisse, Sicherungen
+.env
+*.sql
+*.wpress
