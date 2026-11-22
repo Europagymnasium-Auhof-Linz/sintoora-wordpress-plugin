@@ -2,8 +2,8 @@
 /**
  * Plugin Name:       Sintoora Kalender (Europagymnasium Auhof)
  * Plugin URI:        https://www.europagym.at/
- * Description:       Zeigt den Schulkalender aus SINTOORA mit Klassenfilter an – ohne Suchfeld, ohne Lehrer-Filter, ohne Lehrerdaten und ohne Teilnehmerlisten (Schülernamen). Führt drei Sintoora-Kalender zusammen: Klassentermine, allgemeine Termine wie Ferien, Feiertage und schulautonome Tage sowie die Termine zur Reifeprüfung (eigener Filter „Reifeprüfung“). Allgemeine Termine ohne Klassenzuordnung erscheinen bei jeder Klasse, Tests ohne Klassenzuordnung werden ausgeblendet. Die Links der Sintoora-Kalender werden unter „Einstellungen → Sintoora Kalender“ eingetragen. Einbinden mit dem Shortcode [sintoora_kalender]. Die Termine werden von WordPress serverseitig geladen, bereinigt, zwischengespeichert und im Hintergrund aktualisiert; die Antwort wird gzip-komprimiert.
- * Version:           1.7.0
+ * Description:       Zeigt den Schulkalender aus SINTOORA mit Klassenfilter an – ohne Suchfeld, ohne Lehrer-Filter, ohne Lehrerdaten und ohne Teilnehmerlisten (Schülernamen). Führt drei Sintoora-Kalender zusammen: Klassentermine, allgemeine Termine wie Ferien, Feiertage und schulautonome Tage sowie die Termine zur Reifeprüfung (eigener Filter „Reifeprüfung“). Allgemeine Termine ohne Klassenzuordnung erscheinen bei jeder Klasse, Tests ohne Klassenzuordnung werden ausgeblendet. Die Links der Sintoora-Kalender werden im Menüpunkt „Sintoora Kalender“ (linke Leiste) eingetragen. Einbinden mit dem Shortcode [sintoora_kalender]. Die Termine werden von WordPress serverseitig geladen, bereinigt, zwischengespeichert und im Hintergrund aktualisiert; die Antwort wird gzip-komprimiert.
+ * Version:           1.7.1
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Europagymnasium Auhof
@@ -45,7 +45,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 
 /** Version des Plugins. */
-const SINTOORA_KALENDER_VERSION = '1.7.0';
+const SINTOORA_KALENDER_VERSION = '1.7.1';
 
 // Updates aus Codeberg (auch im Hintergrund per WP-Cron, daher nicht nur im Backend).
 require_once __DIR__ . '/class-sintoora-kalender-codeberg-updater.php';
@@ -63,7 +63,7 @@ const SINTOORA_KALENDER_DATENFORMAT = '1.2.0';
 
 /**
  * Die Links der Sintoora-Anzeigen (Art der Anzeige mit Auslieferungs-Format JSON) stehen
- * in den Einstellungen („Einstellungen → Sintoora Kalender“, Option
+ * in den Einstellungen (Menüpunkt „Sintoora Kalender“, Option
  * SINTOORA_KALENDER_OPTION_QUELLEN). Erlaubt sind nur Links der Form
  * https://app.sintoora.com/screen/calendar/screen?t=<Token> – Anfragen von außen können
  * keine andere Adresse angeben. Die Reihenfolge zählt: Steht ein Termin in mehreren
@@ -1539,7 +1539,7 @@ SKJS;
 
 /*
  * =====================================================================
- * Kalender-Links und Einstellungsseite („Einstellungen → Sintoora Kalender“)
+ * Kalender-Links und Einstellungsseite (Menüpunkt „Sintoora Kalender“)
  * =====================================================================
  */
 
@@ -1775,12 +1775,35 @@ function sintoora_kalender_einstellungen_registrieren() {
 add_action( 'admin_init', 'sintoora_kalender_einstellungen_registrieren' );
 
 /**
- * Menüpunkt „Einstellungen → Sintoora Kalender“ (nur für Administratoren).
+ * Adresse der Einstellungsseite.
+ *
+ * @return string
+ */
+function sintoora_kalender_seiten_url() {
+	return admin_url( 'admin.php?page=sintoora-kalender' );
+}
+
+/**
+ * Eigener Menüpunkt „Sintoora Kalender“ in der linken Leiste (nur für Administratoren, weil dort die Links
+ * mit den Token stehen). Bis 1.7.0 lag er unter „Einstellungen“.
  */
 function sintoora_kalender_menue() {
-	add_options_page( 'Sintoora Kalender', 'Sintoora Kalender', 'manage_options', 'sintoora-kalender', 'sintoora_kalender_seite' );
+	add_menu_page( 'Sintoora Kalender', 'Sintoora Kalender', 'manage_options', 'sintoora-kalender', 'sintoora_kalender_seite', 'dashicons-calendar-alt', 23 );
 }
 add_action( 'admin_menu', 'sintoora_kalender_menue' );
+
+/**
+ * Alte Adresse „Einstellungen → Sintoora Kalender“ (Lesezeichen) auf die neue weiterleiten. WordPress kennt die
+ * Seite dort nicht mehr und würde den Zugriff verweigern; vorher greift diese Weiterleitung.
+ */
+function sintoora_kalender_alte_adresse() {
+	global $pagenow;
+	if ( 'options-general.php' === $pagenow && isset( $_GET['page'] ) && 'sintoora-kalender' === sanitize_key( wp_unslash( $_GET['page'] ) ) && current_user_can( 'manage_options' ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- nur Weiterleitung.
+		wp_safe_redirect( sintoora_kalender_seiten_url() );
+		exit;
+	}
+}
+add_action( 'admin_page_access_denied', 'sintoora_kalender_alte_adresse' );
 
 /**
  * Link „Einstellungen“ in der Plugin-Liste.
@@ -1789,7 +1812,7 @@ add_action( 'admin_menu', 'sintoora_kalender_menue' );
  * @return array
  */
 function sintoora_kalender_aktionslinks( $links ) {
-	array_unshift( $links, '<a href="' . esc_url( admin_url( 'options-general.php?page=sintoora-kalender' ) ) . '">Einstellungen</a>' );
+	array_unshift( $links, '<a href="' . esc_url( sintoora_kalender_seiten_url() ) . '">Einstellungen</a>' );
 	return $links;
 }
 add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'sintoora_kalender_aktionslinks' );
@@ -1804,7 +1827,7 @@ function sintoora_kalender_hinweis() {
 	printf(
 		'<div class="notice notice-warning"><p>%s <a href="%s">%s</a></p></div>',
 		esc_html( 'Sintoora Kalender: Es sind noch keine Kalender-Links eingetragen.' ),
-		esc_url( admin_url( 'options-general.php?page=sintoora-kalender' ) ),
+		esc_url( sintoora_kalender_seiten_url() ),
 		esc_html( 'Jetzt eintragen' )
 	);
 }
@@ -1846,6 +1869,7 @@ function sintoora_kalender_seite() {
 	};
 
 	echo '<div class="wrap"><h1>Sintoora Kalender</h1>';
+	settings_errors(); // Auf eigenen Menüseiten zeigt WordPress „Einstellungen gespeichert“ und Fehler nicht von selbst.
 	if ( is_array( $meldung ) && isset( $meldung[0], $meldung[1] ) && in_array( $meldung[0], array( 'success', 'warning', 'error' ), true ) ) {
 		delete_transient( 'sintoora_kalender_meldung_' . get_current_user_id() );
 		printf( '<div class="notice notice-%s is-dismissible"><p>%s</p></div>', esc_attr( $meldung[0] ), esc_html( $meldung[1] ) );
@@ -1949,7 +1973,7 @@ function sintoora_kalender_neu_laden() {
 		$meldung = array( 'success', sprintf( '%d Termine neu von Sintoora geholt.', count( $daten['appointments'] ) ) );
 	}
 	set_transient( 'sintoora_kalender_meldung_' . get_current_user_id(), $meldung, 120 );
-	wp_safe_redirect( admin_url( 'options-general.php?page=sintoora-kalender' ) );
+	wp_safe_redirect( sintoora_kalender_seiten_url() );
 	exit;
 }
 add_action( 'admin_post_sintoora_kalender_neu_laden', 'sintoora_kalender_neu_laden' );

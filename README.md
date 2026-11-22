@@ -4,14 +4,14 @@ WordPress-Plugin: zeigt den Schulkalender aus SINTOORA mit Klassenfilter an – 
 
 - **Lizenz:** GPL-2.0-or-later (siehe `LICENSE`)
 - **Voraussetzungen:** WordPress 6.0+, PHP 7.4+
-- **Versionen:** Jede Version ist ein Commit mit Tag (`v1.6.0`, `v1.6.1`, `v1.7.0` …).
+- **Versionen:** Jede Version ist ein Commit mit Tag (`v1.6.0` … `v1.7.1`).
 
 ## Wichtig: keine Kalender-Links im Repository
 
 Die Links der Sintoora-Kalender enthalten Token, die wie Passwörter zu behandeln sind. In diesem Repository ist die Voreinstellung `SINTOORA_KALENDER_STANDARD_QUELLEN` deshalb **leer**.
 
 - **Bestehende Website:** Die Links stehen bereits in den Einstellungen, ein Update aus diesem Repository ändert daran nichts.
-- **Neue Installation:** Nach dem Aktivieren unter Einstellungen → Sintoora Kalender die Links eintragen (Form `https://app.sintoora.com/screen/calendar/screen?t=…`).
+- **Neue Installation:** Nach dem Aktivieren im Menüpunkt „Sintoora Kalender“ (linke Leiste) die Links eintragen (Form `https://app.sintoora.com/screen/calendar/screen?t=…`).
 
 **Token nie committen**, auch nicht in Issues oder im Wiki.
 
@@ -37,7 +37,7 @@ git archive --format=zip --prefix=sintoora-kalender/ -o sintoora-kalender-1.7.0.
 
 # Plugin „Sintoora Kalender (Europagymnasium Auhof)“
 
-**Aktuelle Version:** 1.7.0. Die Datei `sintoora-kalender.php` enthält fast alles: PHP, CSS und JavaScript; dazu `class-sintoora-kalender-codeberg-updater.php` für die Updates (als Heredoc).
+**Aktuelle Version:** 1.7.1. Die Datei `sintoora-kalender.php` enthält fast alles: PHP, CSS und JavaScript; dazu `class-sintoora-kalender-codeberg-updater.php` für die Updates (als Heredoc).
 
 ## Aufgabe
 Der Schulkalender aus **SINTOORA** erscheint auf der Website mit Klassenfilter, aber **ohne Suchfeld, ohne Lehrerfilter, ohne Lehrerdaten und ohne Teilnehmerlisten**. Drei Sintoora-Kalender werden zusammengeführt:
@@ -58,7 +58,7 @@ Eingebunden wird er mit `[sintoora_kalender]` (Seite „Klassenkalender“, `/kl
 6. **gzip-Ausgabe** der REST-Antwort über `rest_pre_serve_request` (rund 1,1 MB → 35 KB).
 
 ## Einstellungen und Daten
-- **Kalenderadressen:** unter Einstellungen → Sintoora Kalender (Option `sintoora_kalender_quellen`). Die Voreinstellung `SINTOORA_KALENDER_STANDARD_QUELLEN` ist leer (ab 1.7.0).
+- **Kalenderadressen:** im Menüpunkt „Sintoora Kalender“ in der linken Leiste, nur für Administrator:innen; bis 1.7.0 unter Einstellungen, die alte Adresse leitet weiter (Option `sintoora_kalender_quellen`). Die Voreinstellung `SINTOORA_KALENDER_STANDARD_QUELLEN` ist leer (ab 1.7.0).
 - **Token wie Passwörter behandeln:** Die Token in den Adressen geben Zugriff auf die vollständigen Sintoora-Ansichten (mit Lehrerfilter). Nicht in öffentliche Repositories oder Anleitungen kopieren. Bei Verdacht bei Sintoora neu erzeugen lassen.
 - **Grenzen:** max. 5 MB je Abruf, 5000 Termine, 6 s Zeitlimit je Kalender.
 
@@ -86,9 +86,15 @@ Ablauf, Tests und Paketbau stehen in `ENTWICKLUNG.md`. Zusätzlich prüfen:
 
 ## Hinweis bei veraltetem Stand (ab 1.6.1)
 - Ist der gespeicherte Stand älter als 7 Tage (`SINTOORA_KALENDER_VERALTET_AB`), liefert die REST-Antwort `veraltet: true` und `stand` (Datum/Uhrzeit). Das Skript zeigt dann über der Klassenleiste den Hinweis `.sk-veraltet`: „Hinweis: Die Termine wurden zuletzt am … Uhr aktualisiert. Neuere Änderungen fehlen eventuell.“
-- Im Normalfall (regelmäßiger Abruf alle 15 Minuten) erscheint nichts. Der Hinweis zeigt an, dass Sintoora länger nicht erreichbar war oder ein Kalender-Link nicht mehr gilt; Details stehen unter Einstellungen → Sintoora Kalender.
+- Im Normalfall (regelmäßiger Abruf alle 15 Minuten) erscheint nichts. Der Hinweis zeigt an, dass Sintoora länger nicht erreichbar war oder ein Kalender-Link nicht mehr gilt; Details stehen unter im Menüpunkt „Sintoora Kalender“.
 - Das Datenformat (`SINTOORA_KALENDER_DATENFORMAT`) ist unverändert, gespeicherte Termine gelten nach dem Update weiter.
 
 ## Updates aus Codeberg (ab 1.7.0)
 - Updates aus Codeberg: Das Plugin trägt im Kopf `Update URI: https://codeberg.org/europagym-auhof/…`. WordPress fragt deshalb nie wordpress.org (Schutz vor gleichnamigen Fremd-Plugins), sondern ruft `update_plugins_codeberg.org` auf. Die Updater-Klasse liest die Tags des öffentlichen Repositories (`vX.Y.Z`, höchste gültige Version) und bietet das Tag-Archiv als Paket an. Beim Installieren benennt sie den Ordner (Repository-Name) in den Plugin-Ordner um, prüft vorher, dass die Hauptdatei darin liegt, und aktiviert das Plugin bei einem Abbruch wieder so wie vorher. Zwischenspeicher 6 h (nach Fehlern 1 h), „Erneut prüfen“ unter Dashboard → Aktualisierungen leert ihn. **Neue Version veröffentlichen = Tag auf Codeberg** – danach bietet jede Website das Update an (bzw. installiert es, wenn automatische Updates für das Plugin eingeschaltet sind). Die Klasse steckt in beiden Plugins (eigener Name), Änderungen in beiden nachziehen. Test: `tests/codeberg-update-test.php` (bildet Codeberg nach, 46 Prüfungen).
 - **Voreinstellung der Kalender-Links leer** (ab 1.7.0, auch in diesem Ordner): Die Token stehen nur in den Einstellungen der jeweiligen Website. Bestehende Seiten behalten ihre Links.
+
+## Menüpunkt (ab 1.7.1)
+- Eigener Menüpunkt „Sintoora Kalender“ in der linken Leiste (`add_menu_page`, Position 23 nach dem Raumplan, Symbol Kalender), nur mit `manage_options`, weil auf der Seite die Links mit Token stehen.
+- Die alte Adresse `options-general.php?page=sintoora-kalender` leitet weiter (`admin_page_access_denied`). Alle Links im Plugin nutzen `sintoora_kalender_seiten_url()`.
+- Auf eigenen Menüseiten zeigt WordPress Speicher- und Fehlermeldungen nicht selbst, deshalb ruft die Seite `settings_errors()` auf.
+- Test: `tests/sintoora-menue-test.php` (12 Prüfungen).

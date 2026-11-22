@@ -3,7 +3,7 @@ Tags: kalender, schule, sintoora, termine
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.7.0
+Stable tag: 1.7.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -25,11 +25,11 @@ Das Plugin bindet den Schulkalender des Europagymnasiums Auhof aus dem Schulverw
 * Steht ein Termin in mehreren Kalendern (gleiches Datum, gleicher Titel, gleiche Klassen), wird er nur einmal angezeigt
 * Ohne Suchfeld, ohne Lehrer-Filter, ohne Lehrerdaten und ohne Teilnehmerlisten
 * Schnell: Die Termine kommen sofort aus dem Zwischenspeicher, neu geholt wird im Hintergrund. Die Übertragung ist komprimiert (rund 35 KB statt 1,1 MB).
-* Einstellungsseite „Einstellungen → Sintoora Kalender“: Links der Sintoora-Kalender eintragen, ändern, hinzufügen und entfernen, Stand je Kalender ansehen, Termine sofort neu laden
+* Einstellungsseite „Sintoora Kalender“ (eigener Menüpunkt links): Links der Sintoora-Kalender eintragen, ändern, hinzufügen und entfernen, Stand je Kalender ansehen, Termine sofort neu laden
 
 So funktioniert es:
 
-1. Der Browser darf Sintoora nicht direkt abrufen (CORS). Deshalb holt WordPress die Termine selbst vom Server aus – immer nur von den unter „Einstellungen → Sintoora Kalender“ eingetragenen Sintoora-Adressen (erlaubt sind nur Links zu app.sintoora.com).
+1. Der Browser darf Sintoora nicht direkt abrufen (CORS). Deshalb holt WordPress die Termine selbst vom Server aus – immer nur von den unter „Sintoora Kalender“ (Menüpunkt links) eingetragenen Sintoora-Adressen (erlaubt sind nur Links zu app.sintoora.com).
 2. Die Daten werden bereinigt: Es werden nur die Felder titel, raum, klassen, klassenpart und html übernommen, alles andere (z. B. Lehrerdaten) wird verworfen. Teilnehmerlisten (Personen-Symbol mit Schülernamen im Tooltip) werden entfernt. Das html wird mit einer strengen Allowlist gefiltert (keine Skripte, keine Event-Handler, Links nur seitenintern, keine url() in Styles).
 3. Die bereinigten Termine werden gespeichert und jedem Besucher sofort ausgeliefert – niemand wartet auf Sintoora. Neu geholt wird im Hintergrund über WP-Cron: alle 15 Minuten und zusätzlich, sobald ein Besucher einen Stand bekommt, der älter als 15 Minuten ist. Dieser Besucher sieht dann noch den vorhandenen Stand, der nächste schon den neuen. Nur wenn es noch gar keinen gespeicherten Stand gibt (direkt nach der Installation), wartet der erste Besucher, bis die Termine geholt sind.
 4. Ist Sintoora einmal nicht erreichbar, bleibt der letzte erfolgreiche Stand jedes Kalenders sichtbar. Fällt nur einer der Kalender aus, werden die anderen trotzdem aktualisiert.
@@ -41,7 +41,7 @@ So funktioniert es:
 1. Im WordPress-Dashboard „Plugins → Installieren → Plugin hochladen“ öffnen.
 2. Die Datei sintoora-kalender.zip auswählen und „Jetzt installieren“ klicken.
 3. „Plugin aktivieren“ klicken. Beim Aktivieren werden die Termine gleich einmal von Sintoora geholt.
-   Bei der ZIP-Datei „ohne Links“ zuerst unter „Einstellungen → Sintoora Kalender“ die Links eintragen und speichern (siehe unten).
+   Bei der ZIP-Datei „ohne Links“ zuerst unter „Sintoora Kalender“ (Menüpunkt links) die Links eintragen und speichern (siehe unten).
 4. „Seiten“ öffnen und die Seite „Klassentermin“ bearbeiten.
 5. Im klassischen Editor auf den Reiter „Text“ wechseln und den gesamten alten Kalender-Code löschen (alles mit div id="sintoora-kalender", style und script).
 6. An seine Stelle nur diese eine Zeile einfügen:
@@ -68,7 +68,7 @@ Die gespeicherten Termine und die eingetragenen Kalender-Links bleiben dabei erh
 
 = … sich ein Sintoora-Link ändert oder ein Kalender dazukommen soll? =
 
-Alles unter „Einstellungen → Sintoora Kalender“ (nur für Administratoren; in der Plugin-Liste auch über den Link „Einstellungen“):
+Alles unter „Sintoora Kalender“ (Menüpunkt links) (nur für Administratoren; in der Plugin-Liste auch über den Link „Einstellungen“):
 
 * Link ändern: beim Kalender den neuen Link einfügen und „Änderungen speichern“. Statt des ganzen Links genügt auch der Token (der Teil nach „t=“).
 * Kalender hinzufügen: in der leeren Zeile unten Bezeichnung und Link eintragen und speichern (höchstens 10 Kalender).
@@ -108,7 +108,7 @@ Doppelt eingetragene Termine werden nur dann zusammengefasst, wenn Datum/Uhrzeit
 * Die Hintergrund-Aktualisierung läuft über WP-Cron. WP-Cron startet nur, wenn WordPress selbst eine Anfrage bearbeitet: Seiten, die WP Fastest Cache aus seinem Cache ausliefert, zählen nicht – der Termin-Abruf des Kalenders und das Dashboard schon. War längere Zeit niemand auf der Website, sieht der erste Besucher daher noch den älteren Stand (sofort, ohne Wartezeit); ab dem nächsten Laden ist der Kalender aktuell.
 * Wer das vermeiden möchte: beim Webhoster einen Cronjob einrichten, der alle 15 Minuten die Adresse https://www.europagym.at/wp-cron.php aufruft. Das ist optional und funktioniert zusätzlich zum normalen WP-Cron.
 * Ist WP-Cron auf dem Server abgeschaltet (DISABLE_WP_CRON) und läuft auch kein Cronjob, holt der nächste Besucher die Termine nach 90 Sekunden selbst. Der Kalender bleibt also nie dauerhaft alt.
-* Sofort neu laden: unter „Einstellungen → Sintoora Kalender“ auf „Termine jetzt neu laden“ klicken. Die Seite zeigt außerdem je Kalender, wie viele Termine gespeichert sind, wann sie zuletzt erfolgreich geholt wurden und den letzten Fehler.
+* Sofort neu laden: unter „Sintoora Kalender“ (Menüpunkt links) auf „Termine jetzt neu laden“ klicken. Die Seite zeigt außerdem je Kalender, wie viele Termine gespeichert sind, wann sie zuletzt erfolgreich geholt wurden und den letzten Fehler.
 * Kontrolle: Die Adresse https://www.europagym.at/wp-json/sintoora-kalender/v1/termine im Browser öffnen. In den Entwicklerwerkzeugen (F12 → Netzwerk → Antwort-Header) zeigt „X-Sintoora-Kalender-Stand“, wann die Termine zuletzt (zumindest teilweise) erfolgreich von Sintoora geholt wurden (Zeitangabe in UTC, also 1 bzw. 2 Stunden vor der österreichischen Zeit). Steht dort „Cache-Control: no-cache“, war der ausgelieferte Stand älter als 15 Minuten und der Abruf im Hintergrund wurde gerade angestoßen.
 * Bleibt dieser Stand alt, hat der letzte Abruf von Sintoora nicht geklappt. Dann zeigt der Kalender den letzten erfolgreichen Stand; nach einem Fehler versucht das Plugin es alle 2 Minuten erneut. Den Grund und den betroffenen Kalender zeigt die Einstellungsseite unter „Letzter Fehler“ (und in den 2 Minuten nach dem Fehler der Antwort-Header „X-Sintoora-Kalender-Fehler“, siehe nächster Abschnitt).
 * Falls ein Cache-Plugin oder der Webhoster auch Adressen mit /wp-json/ zwischenspeichert, dort eine Ausnahme für „wp-json/sintoora-kalender“ eintragen.
@@ -124,7 +124,7 @@ Prüfen in den Entwicklerwerkzeugen (F12 → Netzwerk, Seite neu laden, Eintrag 
 
 Der Kalender zeigt dann „Die Termine konnten gerade nicht geladen werden …“ und darunter einen technischen Hinweis:
 
-* „HTTP 503“: Der Webserver hat keinen der Sintoora-Kalender erreicht und hat noch keinen gespeicherten Stand (z. B. direkt nach der Installation), oder es ist noch gar kein Kalender eingetragen. Unter „Einstellungen → Sintoora Kalender“ die Links prüfen (sie müssen im Browser JSON-Daten liefern) und „Termine jetzt neu laden“ klicken.
+* „HTTP 503“: Der Webserver hat keinen der Sintoora-Kalender erreicht und hat noch keinen gespeicherten Stand (z. B. direkt nach der Installation), oder es ist noch gar kein Kalender eingetragen. Unter „Sintoora Kalender“ (Menüpunkt links) die Links prüfen (sie müssen im Browser JSON-Daten liefern) und „Termine jetzt neu laden“ klicken.
 * „HTTP 404“: Das Plugin ist nicht aktiv, oder WordPress kennt die Adresse noch nicht. Plugin aktivieren; sonst „Einstellungen → Permalinks“ öffnen und ohne Änderung „Änderungen speichern“ klicken.
 * „HTTP 401“ oder „HTTP 403“: Ein Sicherheits-Plugin sperrt die REST-Schnittstelle für Besucher. Dort die Route „sintoora-kalender/v1“ (bzw. „/wp-json/sintoora-kalender/“) freigeben.
 * „Zeitüberschreitung“ oder „Failed to fetch“: Die Website selbst hat zu langsam bzw. gar nicht geantwortet. Später erneut versuchen.
@@ -166,6 +166,9 @@ Bleibt der Kalender dauerhaft bei „Termine werden geladen …“ stehen, wird 
 * Deaktivieren entfernt die geplanten Hintergrund-Abrufe (die Einstellungen bleiben). Beim Löschen des Plugins unter „Plugins“ werden zusätzlich alle gespeicherten Werte und die Einstellungen entfernt.
 
 == Changelog ==
+
+= 1.7.1 =
+* Einstellungen als eigener Menüpunkt „Sintoora Kalender“ in der linken Leiste (statt unter Einstellungen). Die alte Adresse leitet weiter.
 
 = 1.7.0 =
 * Updates aus Codeberg: WordPress bietet neue Versionen aus dem öffentlichen Repository europagym-auhof/sintoora-wordpress-plugin an (neuer Tag vX.Y.Z).
