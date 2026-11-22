@@ -25,7 +25,7 @@ Diese Anleitung gilt für beide Plugins. Sie richtet sich an Menschen und an KI-
 | Theme | Die Website nutzt Kadence mit einem eigenen Child-Theme. Die Plugins dürfen vom Theme nicht abhängen |
 | Sprache | Oberfläche, Kommentare und Funktionsnamen Deutsch; Präfix `auhof_` bzw. `sintoora_kalender_` |
 | Text-Domain | `auhof-schulseiten` bzw. `sintoora-kalender` |
-| Updates | `Update URI` im Plugin-Kopf, damit wordpress.org die Plugins nie mit gleichnamigen Fremd-Plugins überschreibt |
+| Updates | `Update URI: https://codeberg.org/…` im Plugin-Kopf: Updates kommen aus dem Codeberg-Repository, nie von wordpress.org (Schutz vor gleichnamigen Fremd-Plugins). Die Updater-Klasse steckt in beiden Plugins, Änderungen in beiden nachziehen |
 
 ### Sicherheitsregeln für jeden Code
 - **Ausgabe immer maskieren:** `esc_html`, `esc_attr`, `esc_url`, `wp_kses`. Daten für JavaScript mit `wp_json_encode( …, JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT )`.
@@ -56,7 +56,7 @@ Diese Anleitung gilt für beide Plugins. Sie richtet sich an Menschen und an KI-
    semgrep scan --metrics=off --config p/php --config p/owasp-top-ten --config p/xss --config p/javascript --config p/secrets <plugin-ordner>
    ```
    Beim Auhof-Plugin zusätzlich die Skripte in `tests/` (Aufruf steht jeweils oben in der Datei).
-6. **Commit und Tag** (`v1.7.2`). Daraus entsteht das Plugin-Paket:
+6. **Commit und Tag** (`v1.7.2`), dann `git push --follow-tags`. **Der Tag ist die Veröffentlichung:** Danach bieten alle Websites das Update an. Für eine Erstinstallation entsteht das Plugin-Paket so:
    ```bash
    git archive --format=zip --prefix=auhof-schulseiten/ -o auhof-schulseiten-1.7.2.zip v1.7.2
    ```
