@@ -56,7 +56,7 @@ Diese Anleitung gilt für beide Plugins. Sie richtet sich an Menschen und an KI-
    semgrep scan --metrics=off --config p/php --config p/owasp-top-ten --config p/xss --config p/javascript --config p/secrets <plugin-ordner>
    ```
    Beim Auhof-Plugin zusätzlich die Skripte in `tests/` (Aufruf steht jeweils oben in der Datei).
-6. **Commit und Tag** (`v1.7.2`), dann `git push --follow-tags`. **Der Tag ist die Veröffentlichung:** Danach bieten alle Websites das Update an. Für eine Erstinstallation entsteht das Plugin-Paket so:
+6. **Commit und Tag** (`v1.7.2`), dann `git push origin main v1.7.2` (Tag ausdrücklich mitschicken). **Der Tag ist die Veröffentlichung:** Danach bieten alle Websites das Update an. Für eine Erstinstallation entsteht das Plugin-Paket so:
    ```bash
    git archive --format=zip --prefix=auhof-schulseiten/ -o auhof-schulseiten-1.7.2.zip v1.7.2
    ```
