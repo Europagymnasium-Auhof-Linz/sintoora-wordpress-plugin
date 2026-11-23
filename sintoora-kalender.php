@@ -3,13 +3,13 @@
  * Plugin Name:       Sintoora Kalender (Europagymnasium Auhof)
  * Plugin URI:        https://www.europagym.at/
  * Description:       Zeigt den Schulkalender aus SINTOORA mit Klassenfilter an – ohne Suchfeld, ohne Lehrer-Filter, ohne Lehrerdaten und ohne Teilnehmerlisten (Schülernamen). Führt drei Sintoora-Kalender zusammen: Klassentermine, allgemeine Termine wie Ferien, Feiertage und schulautonome Tage sowie die Termine zur Reifeprüfung (eigener Filter „Reifeprüfung“). Allgemeine Termine ohne Klassenzuordnung erscheinen bei jeder Klasse, Tests ohne Klassenzuordnung werden ausgeblendet. Die Links der Sintoora-Kalender werden im Menüpunkt „Sintoora Kalender“ (linke Leiste) eingetragen. Einbinden mit dem Shortcode [sintoora_kalender]. Die Termine werden von WordPress serverseitig geladen, bereinigt, zwischengespeichert und im Hintergrund aktualisiert; die Antwort wird gzip-komprimiert.
- * Version:           1.7.1
+ * Version:           1.7.2
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Europagymnasium Auhof
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Update URI:        https://codeberg.org/europagym-auhof/sintoora-wordpress-plugin
+ * Update URI:        https://codeberg.org/europagymnasium-auhof-linz/sintoora-wordpress-plugin
  *
  * Ablauf:
  * 1. Die Kalenderseite enthält nur [sintoora_kalender]. Der Shortcode gibt das leere
@@ -45,11 +45,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 
 /** Version des Plugins. */
-const SINTOORA_KALENDER_VERSION = '1.7.1';
+const SINTOORA_KALENDER_VERSION = '1.7.2';
 
 // Updates aus Codeberg (auch im Hintergrund per WP-Cron, daher nicht nur im Backend).
 require_once __DIR__ . '/class-sintoora-kalender-codeberg-updater.php';
-new Sintoora_Kalender_Codeberg_Updater( __FILE__, 'europagym-auhof/sintoora-wordpress-plugin', 'Sintoora Kalender (Europagymnasium Auhof)', SINTOORA_KALENDER_VERSION );
+new Sintoora_Kalender_Codeberg_Updater( __FILE__, 'europagymnasium-auhof-linz/sintoora-wordpress-plugin', 'Sintoora Kalender (Europagymnasium Auhof)', SINTOORA_KALENDER_VERSION );
 
 /** Ab diesem Alter (Sekunden) steht beim Kalender ein Hinweis, dass die Termine veraltet sein können. */
 const SINTOORA_KALENDER_VERALTET_AB = 7 * DAY_IN_SECONDS;

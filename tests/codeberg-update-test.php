@@ -22,7 +22,7 @@ add_filter( 'pre_http_request', function ( $pre, $args, $url ) {
 				copy( $a[1], $args['filename'] );
 				$a[1] = '';
 			}
-			return array( 'headers' => array(), 'body' => $a[1], 'response' => array( 'code' => $a[0], 'message' => 'x' ), 'cookies' => array(), 'filename' => isset( $args['filename'] ) ? $args['filename'] : null );
+			return array( 'headers' => isset( $a[2] ) ? $a[2] : array(), 'body' => $a[1], 'response' => array( 'code' => $a[0], 'message' => 'x' ), 'cookies' => array(), 'filename' => isset( $args['filename'] ) ? $args['filename'] : null );
 		}
 	}
 	return $pre;
@@ -50,8 +50,8 @@ function ct_archiv( $plugin_ordner, $repo_name, $hauptdatei, $neu, $ohne_hauptda
 }
 
 $faelle = array(
-	array( 'auhof-schulseiten/auhof-schulseiten.php', 'europagym-auhof/auhof-wordpress-plugin' ),
-	array( 'sintoora-kalender/sintoora-kalender.php', 'europagym-auhof/sintoora-wordpress-plugin' ),
+	array( 'auhof-schulseiten/auhof-schulseiten.php', 'europagymnasium-auhof-linz/auhof-wordpress-plugin' ),
+	array( 'sintoora-kalender/sintoora-kalender.php', 'europagymnasium-auhof-linz/sintoora-wordpress-plugin' ),
 );
 wp_set_current_user( get_users( array( 'role' => 'administrator', 'number' => 1, 'fields' => 'ID' ) )[0] );
 
@@ -84,6 +84,30 @@ foreach ( $faelle as list( $datei, $repo ) ) {
 		$GLOBALS['ct_antwort'] = array( $api => $antwort );
 		ct( "Fehlerfall $fall → kein Update", false === apply_filters( 'update_plugins_codeberg.org', false, $daten, $datei, array() ) );
 	}
+	// 2b) Weiterleitungen (Repository umgezogen): nur innerhalb von codeberg.org, höchstens drei.
+	$name = basename( $repo );
+	$neuort = 'https://codeberg.org/api/v1/repos/umgezogen-org/' . $name . '/tags?limit=50';
+	$tagliste = wp_json_encode( array( array( 'name' => 'v7.7.7' ) ) );
+	delete_site_transient( $speicher );
+	$GLOBALS['ct_antwort'] = array( $api => array( 307, '', array( 'location' => $neuort ) ), $neuort => array( 200, $tagliste ) );
+	$r = apply_filters( 'update_plugins_codeberg.org', false, $daten, $datei, array() );
+	ct( 'Weiterleitung innerhalb Codeberg wird gefolgt', is_array( $r ) && '7.7.7' === $r['version'], wp_json_encode( $r ) );
+	delete_site_transient( $speicher );
+	$GLOBALS['ct_antwort'] = array( $api => array( 301, '', array( 'location' => '/api/v1/repos/umgezogen-org/' . $name . '/tags?limit=50' ) ), $neuort => array( 200, $tagliste ) );
+	$r = apply_filters( 'update_plugins_codeberg.org', false, $daten, $datei, array() );
+	ct( 'Relative Weiterleitung wird auf codeberg.org aufgelöst', is_array( $r ) && '7.7.7' === $r['version'] );
+	foreach ( array( 'fremder Server' => 'https://boese.example/api/v1/repos/x/y/tags', 'http statt https' => 'http://codeberg.org/api/v1/repos/x/y/tags', 'ähnlicher Name' => 'https://codeberg.org.boese.example/x' ) as $fall => $ziel ) {
+		delete_site_transient( $speicher );
+		$GLOBALS['ct_antwort'] = array( $api => array( 302, '', array( 'location' => $ziel ) ), 'https://boese.example' => array( 200, $tagliste ), 'http://codeberg.org' => array( 200, $tagliste ), 'https://codeberg.org.boese.example' => array( 200, $tagliste ) );
+		$GLOBALS['ct_anfragen'] = array();
+		$r = apply_filters( 'update_plugins_codeberg.org', false, $daten, $datei, array() );
+		ct( "Weiterleitung abgelehnt: $fall", false === $r && 1 === count( $GLOBALS['ct_anfragen'] ), count( $GLOBALS['ct_anfragen'] ) . ' Anfragen' );
+	}
+	delete_site_transient( $speicher );
+	$GLOBALS['ct_antwort'] = array( $api => array( 307, '', array( 'location' => $api . '?limit=50' ) ) );
+	$GLOBALS['ct_anfragen'] = array();
+	$r = apply_filters( 'update_plugins_codeberg.org', false, $daten, $datei, array() );
+	ct( 'Endlose Weiterleitung nach 4 Anfragen abgebrochen', false === $r && 4 === count( $GLOBALS['ct_anfragen'] ), count( $GLOBALS['ct_anfragen'] ) . ' Anfragen' );
 	ct( 'Nach Fehler kurz zwischengespeichert', is_array( get_site_transient( $speicher ) ) && ! isset( get_site_transient( $speicher )['version'] ) );
 
 	// 3) WordPress' eigene Update-Prüfung und „Details ansehen“.

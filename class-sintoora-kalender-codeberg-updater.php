@@ -11,7 +11,8 @@
  * Neue Version veröffentlichen = Tag „vX.Y.Z“ auf Codeberg anlegen. Installiert wird nur, wenn jemand im
  * Backend auf „Aktualisieren“ klickt – oder automatisch, falls für das Plugin automatische Updates aktiviert sind.
  *
- * Sicherheit: nur https zu der fest eingetragenen Repository-Adresse, Versionsnummern streng geprüft, Antwort
+ * Sicherheit: nur https zu der fest eingetragenen Repository-Adresse (Weiterleitungen nur innerhalb von
+ * codeberg.org, höchstens drei), Versionsnummern streng geprüft, Antwort
  * auf 256 KB begrenzt, keine Angaben über die Website im Abruf. Ergebnis 6 Stunden zwischengespeichert (nach
  * Fehlern 1 Stunde), „Erneut prüfen“ unter Dashboard → Aktualisierungen leert den Zwischenspeicher.
  *
@@ -93,16 +94,7 @@ final class Sintoora_Kalender_Codeberg_Updater {
 			return isset( $gespeichert['version'] ) ? $gespeichert : null;
 		}
 
-		$antwort = wp_safe_remote_get(
-			'https://codeberg.org/api/v1/repos/' . $this->repo . '/tags?limit=50',
-			array(
-				'timeout'             => 10,
-				'redirection'         => 0,
-				'limit_response_size' => 262144,
-				'user-agent'          => 'WordPress-Plugin-Updater',
-				'headers'             => array( 'Accept' => 'application/json' ),
-			)
-		);
+		$antwort = $this->abrufen( 'https://codeberg.org/api/v1/repos/' . $this->repo . '/tags?limit=50' );
 		$neueste = null;
 		if ( ! is_wp_error( $antwort ) && 200 === (int) wp_remote_retrieve_response_code( $antwort ) ) {
 			$tags = json_decode( (string) wp_remote_retrieve_body( $antwort ), true );
@@ -122,6 +114,42 @@ final class Sintoora_Kalender_Codeberg_Updater {
 		}
 		set_site_transient( $this->speicher(), $neueste ? $neueste : array( 'fehler' => 1 ), $neueste ? self::DAUER_OK : self::DAUER_FEHLER );
 		return $neueste;
+	}
+
+	/**
+	 * Abruf mit kontrollierten Weiterleitungen: Codeberg leitet nach dem Umbenennen oder Übertragen eines
+	 * Repositorys von der alten Adresse weiter. Gefolgt wird höchstens dreimal und nur zu Adressen unter
+	 * https://codeberg.org/ – jedes andere Ziel gilt als Fehler.
+	 *
+	 * @param string $url Adresse.
+	 * @return array|WP_Error
+	 */
+	private function abrufen( $url ) {
+		for ( $sprung = 0; $sprung <= 3; $sprung++ ) {
+			$antwort = wp_safe_remote_get(
+				$url,
+				array(
+					'timeout'             => 10,
+					'redirection'         => 0,
+					'limit_response_size' => 262144,
+					'user-agent'          => 'WordPress-Plugin-Updater',
+					'headers'             => array( 'Accept' => 'application/json' ),
+				)
+			);
+			$code = is_wp_error( $antwort ) ? 0 : (int) wp_remote_retrieve_response_code( $antwort );
+			if ( ! in_array( $code, array( 301, 302, 303, 307, 308 ), true ) ) {
+				return $antwort;
+			}
+			$ziel = trim( (string) wp_remote_retrieve_header( $antwort, 'location' ) );
+			if ( 0 === strpos( $ziel, '/' ) && 0 !== strpos( $ziel, '//' ) ) {
+				$ziel = 'https://codeberg.org' . $ziel;
+			}
+			if ( ! preg_match( '#^https://codeberg\.org/#', $ziel ) ) {
+				return new WP_Error( 'codeberg_weiterleitung', 'Weiterleitung außerhalb von Codeberg abgelehnt.' );
+			}
+			$url = $ziel;
+		}
+		return new WP_Error( 'codeberg_weiterleitung', 'Zu viele Weiterleitungen.' );
 	}
 
 	/**
