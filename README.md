@@ -4,7 +4,7 @@ WordPress-Plugin: zeigt den Schulkalender aus SINTOORA mit Klassenfilter an – 
 
 - **Lizenz:** GPL-2.0-or-later (siehe `LICENSE`)
 - **Voraussetzungen:** WordPress 6.0+, PHP 7.4+
-- **Versionen:** Jede Version ist ein Commit mit Tag (`v1.6.0` … `v1.7.1`).
+- **Versionen:** Jede Version ist ein Commit mit Tag (`v1.6.0` … `v1.9.0`).
 
 ## Wichtig: keine Kalender-Links im Repository
 
@@ -30,7 +30,7 @@ Ab Version 1.9.0 holt sich WordPress neue Versionen **nur noch aus diesem GitHub
 Für WordPress braucht es eine ZIP-Datei mit dem Ordner `sintoora-kalender/`:
 
 ```
-git archive --format=zip --prefix=sintoora-kalender/ -o sintoora-kalender-1.7.0.zip v1.7.0
+git archive --format=zip --prefix=sintoora-kalender/ -o sintoora-kalender-1.9.0.zip v1.9.0
 ```
 
 `README.md`, `ENTWICKLUNG.md` und die Git-Dateien sind vom Archiv ausgenommen.
