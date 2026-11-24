@@ -3,7 +3,7 @@ Tags: kalender, schule, sintoora, termine
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.7.2
+Stable tag: 1.8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -166,6 +166,9 @@ Bleibt der Kalender dauerhaft bei „Termine werden geladen …“ stehen, wird 
 * Deaktivieren entfernt die geplanten Hintergrund-Abrufe (die Einstellungen bleiben). Beim Löschen des Plugins unter „Plugins“ werden zusätzlich alle gespeicherten Werte und die Einstellungen entfernt.
 
 == Changelog ==
+
+= 1.8.0 =
+* Updates: GitHub (Europagymnasium-Auhof-Linz/sintoora-wordpress-plugin) und Codeberg werden gefragt, die höhere Version gewinnt – Übergang für den Umzug nach GitHub.
 
 = 1.7.2 =
 * Updates: neue Adresse des Repositorys (Organisation europagymnasium-auhof-linz); Weiterleitungen von Codeberg werden innerhalb von codeberg.org gefolgt, damit ein späterer Umzug Updates nicht mehr unterbricht.
