@@ -3,13 +3,13 @@
  * Plugin Name:       Sintoora Kalender (Europagymnasium Auhof)
  * Plugin URI:        https://www.europagym.at/
  * Description:       Zeigt den Schulkalender aus SINTOORA mit Klassenfilter an – ohne Suchfeld, ohne Lehrer-Filter, ohne Lehrerdaten und ohne Teilnehmerlisten (Schülernamen). Führt drei Sintoora-Kalender zusammen: Klassentermine, allgemeine Termine wie Ferien, Feiertage und schulautonome Tage sowie die Termine zur Reifeprüfung (eigener Filter „Reifeprüfung“). Allgemeine Termine ohne Klassenzuordnung erscheinen bei jeder Klasse, Tests ohne Klassenzuordnung werden ausgeblendet. Die Links der Sintoora-Kalender werden im Menüpunkt „Sintoora Kalender“ (linke Leiste) eingetragen. Einbinden mit dem Shortcode [sintoora_kalender]. Die Termine werden von WordPress serverseitig geladen, bereinigt, zwischengespeichert und im Hintergrund aktualisiert; die Antwort wird gzip-komprimiert.
- * Version:           1.8.0
+ * Version:           1.9.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Europagymnasium Auhof
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Update URI:        https://codeberg.org/europagymnasium-auhof-linz/sintoora-wordpress-plugin
+ * Update URI:        https://github.com/Europagymnasium-Auhof-Linz/sintoora-wordpress-plugin
  *
  * Ablauf:
  * 1. Die Kalenderseite enthält nur [sintoora_kalender]. Der Shortcode gibt das leere
@@ -45,17 +45,15 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 
 /** Version des Plugins. */
-const SINTOORA_KALENDER_VERSION = '1.8.0';
+const SINTOORA_KALENDER_VERSION = '1.9.0';
 
-// Updates (auch im Hintergrund per WP-Cron, daher nicht nur im Backend). Übergang: GitHub und Codeberg werden
-// gefragt, die höhere Version gewinnt (bei Gleichstand GitHub). Nach dem Umzug nur noch 'github.com' eintragen
-// und oben „Update URI: https://github.com/Europagymnasium-Auhof-Linz/sintoora-wordpress-plugin“ setzen.
+// Updates nur aus dem GitHub-Repository (auch im Hintergrund per WP-Cron, daher nicht nur im Backend).
+// Codeberg wird seit 1.9.0 nicht mehr gefragt.
 require_once __DIR__ . '/class-sintoora-kalender-updater.php';
 new Sintoora_Kalender_Updater(
 	__FILE__,
 	array(
-		'github.com'   => 'Europagymnasium-Auhof-Linz/sintoora-wordpress-plugin',
-		'codeberg.org' => 'europagymnasium-auhof-linz/sintoora-wordpress-plugin',
+		'github.com' => 'Europagymnasium-Auhof-Linz/sintoora-wordpress-plugin',
 	),
 	'Sintoora Kalender (Europagymnasium Auhof)',
 	SINTOORA_KALENDER_VERSION

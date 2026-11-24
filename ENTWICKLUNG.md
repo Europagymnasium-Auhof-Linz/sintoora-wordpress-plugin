@@ -25,7 +25,7 @@ Diese Anleitung gilt für beide Plugins. Sie richtet sich an Menschen und an KI-
 | Theme | Die Website nutzt Kadence mit einem eigenen Child-Theme. Die Plugins dürfen vom Theme nicht abhängen |
 | Sprache | Oberfläche, Kommentare und Funktionsnamen Deutsch; Präfix `auhof_` bzw. `sintoora_kalender_` |
 | Text-Domain | `auhof-schulseiten` bzw. `sintoora-kalender` |
-| Updates | `Update URI: https://codeberg.org/…` im Plugin-Kopf: Updates kommen aus dem Codeberg-Repository, nie von wordpress.org (Schutz vor gleichnamigen Fremd-Plugins). Die Updater-Klasse steckt in beiden Plugins, Änderungen in beiden nachziehen |
+| Updates | `Update URI: https://github.com/…` im Plugin-Kopf: Updates kommen nur aus dem GitHub-Repository, nie von wordpress.org (Schutz vor gleichnamigen Fremd-Plugins) und seit Auhof 1.11.0 / Sintoora 1.9.0 nicht mehr von Codeberg. Neue Version = Tag `vX.Y.Z` auf GitHub. Die Updater-Klasse steckt in beiden Plugins, Änderungen in beiden nachziehen |
 
 ### Sicherheitsregeln für jeden Code
 - **Ausgabe immer maskieren:** `esc_html`, `esc_attr`, `esc_url`, `wp_kses`. Daten für JavaScript mit `wp_json_encode( …, JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT )`.

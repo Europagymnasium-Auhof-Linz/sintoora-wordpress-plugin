@@ -17,9 +17,9 @@ Die Links der Sintoora-Kalender enthalten Token, die wie Passwörter zu behandel
 
 ## Updates auf den Websites
 
-Ab Version 1.8.0 holt sich WordPress neue Versionen selbst (`Update URI` im Plugin-Kopf, Klasse `class-sintoora-kalender-updater.php`). Übergangsweise fragt das Plugin **GitHub und Codeberg** und nimmt die höhere Version (bei Gleichstand GitHub); nach dem Umzug fragt es nur noch GitHub:
+Ab Version 1.9.0 holt sich WordPress neue Versionen **nur noch aus diesem GitHub-Repository** (`Update URI: https://github.com/Europagymnasium-Auhof-Linz/sintoora-wordpress-plugin` im Plugin-Kopf, Klasse `class-sintoora-kalender-updater.php`, nimmt keinen anderen Server an):
 
-- GitHub: `Europagymnasium-Auhof-Linz/sintoora-wordpress-plugin`, Codeberg: `europagymnasium-auhof-linz/sintoora-wordpress-plugin` (1.7.0 bis 1.7.2 fragen nur Codeberg).
+- Frühere Versionen: 1.7.0–1.7.2 fragten nur Codeberg, 1.8.0 (Übergang) GitHub und Codeberg. Websites mit einer älteren Version kommen trotzdem hierher: Sie installieren zuerst die Übergangsversion aus Codeberg und finden dann die GitHub-Versionen.
 
 - **Neue Version veröffentlichen = Tag `vX.Y.Z` pushen.** Spätestens nach 6 Stunden zeigt jede Website unter Plugins „Aktualisierung verfügbar“; sofort mit Dashboard → Aktualisierungen → „Erneut prüfen“.
 - Installiert wird beim Klick auf „Jetzt aktualisieren“ – oder von selbst, wenn für das Plugin automatische Updates eingeschaltet sind.
@@ -39,7 +39,7 @@ git archive --format=zip --prefix=sintoora-kalender/ -o sintoora-kalender-1.7.0.
 
 # Plugin „Sintoora Kalender (Europagymnasium Auhof)“
 
-**Aktuelle Version:** 1.8.0. Die Datei `sintoora-kalender.php` enthält fast alles: PHP, CSS und JavaScript; dazu `class-sintoora-kalender-updater.php` für die Updates.
+**Aktuelle Version:** 1.9.0. Die Datei `sintoora-kalender.php` enthält fast alles: PHP, CSS und JavaScript; dazu `class-sintoora-kalender-updater.php` für die Updates.
 
 ## Aufgabe
 Der Schulkalender aus **SINTOORA** erscheint auf der Website mit Klassenfilter, aber **ohne Suchfeld, ohne Lehrerfilter, ohne Lehrerdaten und ohne Teilnehmerlisten**. Drei Sintoora-Kalender werden zusammengeführt:
@@ -91,7 +91,10 @@ Ablauf, Tests und Paketbau stehen in `ENTWICKLUNG.md`. Zusätzlich prüfen:
 - Im Normalfall (regelmäßiger Abruf alle 15 Minuten) erscheint nichts. Der Hinweis zeigt an, dass Sintoora länger nicht erreichbar war oder ein Kalender-Link nicht mehr gilt; Details stehen unter im Menüpunkt „Sintoora Kalender“.
 - Das Datenformat (`SINTOORA_KALENDER_DATENFORMAT`) ist unverändert, gespeicherte Termine gelten nach dem Update weiter.
 
-## Updates aus GitHub und Codeberg (ab 1.8.0; 1.7.0–1.7.2 nur Codeberg)
+## Updates nur aus GitHub (ab 1.9.0)
+- `Update URI: https://github.com/Europagymnasium-Auhof-Linz/sintoora-wordpress-plugin`; die Klasse nimmt nur `github.com` an (Codeberg-Zweig entfernt), eigener Zwischenspeicher `sintoora_update_github_…`. Neue Version = Tag `vX.Y.Z` auf GitHub. Test: `tests/plugin-update-test.php` (80 Prüfungen für beide Plugins).
+
+## Updates aus GitHub und Codeberg (1.8.0, Übergang; 1.7.0–1.7.2 nur Codeberg)
 - Ab 1.8.0 fragt die Klasse `Sintoora_Kalender_Updater` (`class-sintoora-kalender-updater.php`, baugleich mit `Auhof_Updater`) GitHub (`Europagymnasium-Auhof-Linz/sintoora-wordpress-plugin`) und Codeberg und nimmt die höhere Version (Gleichstand: GitHub). Fällt eine Quelle aus, zählt die andere (Zwischenspeicher dann 1 h). Umzug abschließen: `Update URI` auf `https://github.com/Europagymnasium-Auhof-Linz/sintoora-wordpress-plugin` setzen und nur noch `github.com` eintragen. Test: `tests/plugin-update-test.php`.
 - Updates aus Codeberg: Das Plugin trägt im Kopf `Update URI: https://codeberg.org/europagymnasium-auhof-linz/…`. WordPress fragt deshalb nie wordpress.org (Schutz vor gleichnamigen Fremd-Plugins), sondern ruft `update_plugins_codeberg.org` auf. Die Updater-Klasse liest die Tags des öffentlichen Repositories (`vX.Y.Z`, höchste gültige Version) und bietet das Tag-Archiv als Paket an. Beim Installieren benennt sie den Ordner (Repository-Name) in den Plugin-Ordner um, prüft vorher, dass die Hauptdatei darin liegt, und aktiviert das Plugin bei einem Abbruch wieder so wie vorher. Zwischenspeicher 6 h (nach Fehlern 1 h), „Erneut prüfen“ unter Dashboard → Aktualisierungen leert ihn. **Neue Version veröffentlichen = Tag auf Codeberg** – danach bietet jede Website das Update an (bzw. installiert es, wenn automatische Updates für das Plugin eingeschaltet sind). Die Klasse steckt in beiden Plugins (eigener Name), Änderungen in beiden nachziehen. Test: `tests/codeberg-update-test.php` (bildet Codeberg nach, 46 Prüfungen).
 - **Voreinstellung der Kalender-Links leer** (ab 1.7.0, auch in diesem Ordner): Die Token stehen nur in den Einstellungen der jeweiligen Website. Bestehende Seiten behalten ihre Links.

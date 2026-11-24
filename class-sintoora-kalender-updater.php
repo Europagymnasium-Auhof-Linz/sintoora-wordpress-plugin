@@ -1,25 +1,24 @@
 <?php
 /**
- * Updates aus öffentlichen Git-Repositories (GitHub und/oder Codeberg).
+ * Updates aus dem öffentlichen GitHub-Repository.
  *
- * WordPress fragt bei Plugins mit „Update URI: https://<server>/…“ nicht wordpress.org, sondern ruft den Filter
- * „update_plugins_<server>“ auf. Diese Klasse beantwortet ihn: Sie liest die Tags (v1.2.3) aller eingetragenen
- * Quellen, nimmt die höchste Version und bietet deren Tag-Archiv als Paket an. Beim Installieren benennt sie den
- * Ordner im Archiv in den Plugin-Ordner um und prüft, dass die Hauptdatei des Plugins darin liegt.
+ * WordPress fragt bei Plugins mit „Update URI: https://github.com/…“ nicht wordpress.org, sondern ruft den Filter
+ * „update_plugins_github.com“ auf. Diese Klasse beantwortet ihn: Sie liest die Tags (v1.2.3) des Repositorys,
+ * nimmt die höchste Version und bietet deren Tag-Archiv als Paket an. Beim Installieren benennt sie den Ordner im
+ * Archiv („name-1.2.3“) in den Plugin-Ordner um und prüft, dass die Hauptdatei des Plugins darin liegt.
  *
- * Quellen werden im Plugin beim Erzeugen der Klasse eingetragen, Reihenfolge = Vorrang bei gleicher Version:
- *   new Sintoora_Kalender_Updater( __FILE__, array( 'github.com' => 'besitzer/name', 'codeberg.org' => 'besitzer/name' ), … );
- * Übergang Codeberg → GitHub: beide Quellen eintragen. Nach dem Umzug nur noch 'github.com' eintragen und im
- * Plugin-Kopf „Update URI: https://github.com/…“ setzen.
+ * Eingetragen wird das Repository beim Erzeugen der Klasse:
+ *   new Sintoora_Kalender_Updater( __FILE__, array( 'github.com' => 'besitzer/name' ), … );
+ * Andere Server als github.com werden nicht angenommen (bis Auhof 1.10.0 / Sintoora 1.8.0 zusätzlich Codeberg).
  *
  * Neue Version veröffentlichen = Tag „vX.Y.Z“ anlegen. Installiert wird nur, wenn jemand im Backend auf
  * „Aktualisieren“ klickt – oder automatisch, falls für das Plugin automatische Updates aktiviert sind.
  *
- * Sicherheit: nur https zu den fest eingetragenen Repository-Adressen, Weiterleitungen nur innerhalb desselben
- * Servers (höchstens drei; bei GitHub nur innerhalb von api.github.com), Versionsnummern streng geprüft, Antwort
- * auf 256 KB begrenzt, keine Angaben über die Website im Abruf. Fällt eine Quelle aus (z. B. GitHub-Abrufgrenze
- * von 60 Anfragen je Stunde und Server), zählt die andere. Ergebnis 6 Stunden zwischengespeichert (nach einem
- * Fehler bei einer Quelle 1 Stunde), „Erneut prüfen“ unter Dashboard → Aktualisierungen leert den Zwischenspeicher.
+ * Sicherheit: nur https zur fest eingetragenen Repository-Adresse, Weiterleitungen nur innerhalb von
+ * api.github.com (höchstens drei), Versionsnummern streng geprüft, Antwort auf 256 KB begrenzt, keine Angaben über
+ * die Website im Abruf. Ergebnis 6 Stunden zwischengespeichert, nach einem Fehler (z. B. GitHub-Abrufgrenze von
+ * 60 Anfragen je Stunde und Server) 1 Stunde. „Erneut prüfen“ unter Dashboard → Aktualisierungen leert den
+ * Zwischenspeicher.
  *
  * Dieselbe Klasse steckt (mit anderem Namen) auch im Plugin „Auhof Schulseiten“; Änderungen in beiden nachziehen.
  *
@@ -29,12 +28,15 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Updater für ein Plugin aus GitHub- und/oder Codeberg-Repositories.
+ * Updater für ein Plugin aus einem GitHub-Repository.
  */
 final class Sintoora_Kalender_Updater {
 
 	/** Gültige Tags: v1.2.3 oder 1.2.3. */
 	const TAG_MUSTER = '/^v?(\d{1,3}\.\d{1,3}\.\d{1,3})$/';
+
+	/** Einzige erlaubte Quelle. */
+	const SERVER = 'github.com';
 
 	/** Gültige Repository-Angabe „besitzer/name“. */
 	const REPO_MUSTER = '#^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$#';
@@ -63,7 +65,7 @@ final class Sintoora_Kalender_Updater {
 
 	/**
 	 * @param string               $datei   __FILE__ der Plugin-Hauptdatei.
-	 * @param array<string,string> $quellen Server ('github.com' oder 'codeberg.org') => Repository „besitzer/name“.
+	 * @param array<string,string> $quellen 'github.com' => Repository „besitzer/name“ (andere Server werden ignoriert).
 	 * @param string               $name    Anzeigename.
 	 * @param string               $version Installierte Version.
 	 */
@@ -73,7 +75,7 @@ final class Sintoora_Kalender_Updater {
 		$this->name    = $name;
 		$this->version = $version;
 		foreach ( (array) $quellen as $server => $repo ) {
-			if ( in_array( $server, array( 'github.com', 'codeberg.org' ), true ) && is_string( $repo ) && preg_match( self::REPO_MUSTER, $repo ) ) {
+			if ( self::SERVER === $server && is_string( $repo ) && preg_match( self::REPO_MUSTER, $repo ) ) {
 				$this->quellen[ $server ] = $repo;
 				add_filter( 'update_plugins_' . $server, array( $this, 'update_pruefen' ), 10, 3 );
 			}
@@ -86,33 +88,24 @@ final class Sintoora_Kalender_Updater {
 	}
 
 	/**
-	 * Adressen einer Quelle.
+	 * Adressen des Repositorys.
 	 *
-	 * @param string $server 'github.com' oder 'codeberg.org'.
+	 * @param string $server 'github.com'.
 	 * @param string $repo   „besitzer/name“.
 	 * @return array{web:string,tags:string,api:string,erlaubt:string,accept:string}
 	 */
 	private static function adressen( $server, $repo ) {
-		if ( 'github.com' === $server ) {
-			return array(
-				'web'     => 'https://github.com/' . $repo,
-				'tags'    => 'https://github.com/' . $repo . '/tags',
-				'api'     => 'https://api.github.com/repos/' . $repo . '/tags?per_page=100',
-				'erlaubt' => 'https://api.github.com',
-				'accept'  => 'application/vnd.github+json',
-			);
-		}
 		return array(
-			'web'     => 'https://codeberg.org/' . $repo,
-			'tags'    => 'https://codeberg.org/' . $repo . '/tags',
-			'api'     => 'https://codeberg.org/api/v1/repos/' . $repo . '/tags?limit=50',
-			'erlaubt' => 'https://codeberg.org',
-			'accept'  => 'application/json',
+			'web'     => 'https://github.com/' . $repo,
+			'tags'    => 'https://github.com/' . $repo . '/tags',
+			'api'     => 'https://api.github.com/repos/' . $repo . '/tags?per_page=100',
+			'erlaubt' => 'https://api.github.com',
+			'accept'  => 'application/vnd.github+json',
 		);
 	}
 
 	/**
-	 * Tag-Archiv einer Quelle (GitHub leitet zum Herunterladen auf codeload.github.com weiter).
+	 * Tag-Archiv (GitHub leitet zum Herunterladen auf codeload.github.com weiter).
 	 *
 	 * @param string $server Server.
 	 * @param string $repo   „besitzer/name“.
@@ -120,15 +113,12 @@ final class Sintoora_Kalender_Updater {
 	 * @return string
 	 */
 	private static function paket( $server, $repo, $tag ) {
-		if ( 'github.com' === $server ) {
-			return 'https://github.com/' . $repo . '/archive/refs/tags/' . rawurlencode( $tag ) . '.zip';
-		}
-		return 'https://codeberg.org/' . $repo . '/archive/' . rawurlencode( $tag ) . '.zip';
+		return 'https://github.com/' . $repo . '/archive/refs/tags/' . rawurlencode( $tag ) . '.zip';
 	}
 
 	/** @return string Name des Zwischenspeichers. */
 	private function speicher() {
-		return 'sintoora_update_' . sanitize_key( $this->ordner );
+		return 'sintoora_update_github_' . sanitize_key( $this->ordner ); // eigener Name: Einträge aus 1.8.0 (auch Codeberg) gelten nicht.
 	}
 
 	/** @return string Adresse der ersten (bevorzugten) Quelle. */
@@ -204,12 +194,12 @@ final class Sintoora_Kalender_Updater {
 	}
 
 	/**
-	 * Abruf mit kontrollierten Weiterleitungen: Nach dem Umbenennen oder Übertragen eines Repositorys leiten
-	 * GitHub und Codeberg von der alten Adresse weiter. Gefolgt wird höchstens dreimal und nur zu Adressen unter
-	 * $erlaubt (z. B. https://api.github.com/) – jedes andere Ziel gilt als Fehler.
+	 * Abruf mit kontrollierten Weiterleitungen: Nach dem Umbenennen oder Übertragen eines Repositorys leitet
+	 * GitHub von der alten Adresse weiter. Gefolgt wird höchstens dreimal und nur zu Adressen unter
+	 * $erlaubt (https://api.github.com/) – jedes andere Ziel gilt als Fehler.
 	 *
 	 * @param string $url     Adresse.
-	 * @param string $erlaubt Erlaubter Anfang ohne Schrägstrich am Ende, z. B. „https://codeberg.org“.
+	 * @param string $erlaubt Erlaubter Anfang ohne Schrägstrich am Ende, „https://api.github.com“.
 	 * @param string $accept  Accept-Kopfzeile.
 	 * @return array|WP_Error
 	 */
@@ -334,7 +324,7 @@ final class Sintoora_Kalender_Updater {
 	}
 
 	/**
-	 * Ordner aus dem Archiv (GitHub: „name-1.2.3“, Codeberg: „name“) in den Plugin-Ordner umbenennen,
+	 * Ordner aus dem Archiv (GitHub: „name-1.2.3“) in den Plugin-Ordner umbenennen,
 	 * nur für dieses Plugin.
 	 *
 	 * @param string|WP_Error $quelle   Entpackter Ordner.
@@ -362,7 +352,7 @@ final class Sintoora_Kalender_Updater {
 	}
 
 	/**
-	 * „Erneut prüfen“ (Dashboard → Aktualisierungen) fragt alle Quellen sofort wieder.
+	 * „Erneut prüfen“ (Dashboard → Aktualisierungen) fragt GitHub sofort wieder.
 	 */
 	public function erneut_pruefen() {
 		if ( isset( $_GET['force-check'] ) && current_user_can( 'update_plugins' ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- leert nur den Zwischenspeicher, wie WordPress selbst.
